@@ -12,7 +12,7 @@
 - 用当前路径上的 `(节点 ID, 调用栈)` 状态检测循环；回溯时删除状态，使分支汇合后仍能分别记录路径，也允许同一函数被不同调用点重复调用。
 - 每次分析前清空已有结果和调用栈，输出沿用原项目的 `<input-bitcode>.res.txt` 格式。
 
-图片中的 `Assignment-3-CFA/CFGA.cpp` 在这两个仓库中不存在，对应的实际待补全文件为本仓库的 `Assignment-2-CFA/CFGA.cpp`。图片中的 `Assignment-3-IR/Test-Cases` 也不存在；测试使用本仓库 `Assignment-2-CFA/Test-Cases` 的 5 个用例，并补充另一个仓库 `Assignment-3-CFLR/Test-Cases` 的 8 个用例。没有修改 Assignment-3 的 CFLR 作业实现。
+本作业的代码文件为 `Assignment-2-CFA/CFGA.cpp`，原始测试集为 `Assignment-2-CFA/Test-Cases`。
 
 ### 路径语义与边界
 
@@ -40,7 +40,7 @@ cat multi-call.bc.res.txt
 
 ### 自动验证
 
-本仓库已附上 Assignment-3 的原始测试集副本，无需另行下载即可运行：
+验证范围为本仓库的 5 个原始测试用例和 6 个针对本作业补充的回归用例：
 
 ```bash
 python3 tests/verify_paths.py \
@@ -49,9 +49,9 @@ python3 tests/verify_paths.py \
   --out ../verification
 ```
 
-如需使用独立克隆的 Assignment-3，可增加 `--assignment3 ../Assignment-3`。测试集来源与版本见 `tests/SOURCES.md`。
+测试集来源与版本见 `tests/SOURCES.md`。
 
-验证脚本使用真实的 `cfga` 程序和 SVF 输出的 `icfg_initial.dot`，独立解析调用边、返回边及对应调用点，比较参考路径集合与结果文件，并检查预期路径数和重复运行的一致性。另外包含嵌套重复调用、分支汇合、自递归、互递归、无出口和外部调用 6 个回归用例。共 19 个用例已全部通过；详细运行结果见 `TEST_REPORT.md`。
+验证脚本使用真实的 `cfga` 程序和 SVF 输出的 `icfg_initial.dot`，独立解析调用边、返回边及对应调用点，比较参考路径集合与结果文件，并检查预期路径数和重复运行的一致性。回归用例覆盖嵌套重复调用、分支汇合、自递归、互递归、无出口和外部调用。共 11 个用例已全部通过；详细运行结果见 `TEST_REPORT.md`。
 
 ### 原项目说明
 

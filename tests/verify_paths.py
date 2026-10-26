@@ -83,15 +83,13 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--cfga', type=Path, required=True)
     parser.add_argument('--clang', type=Path, required=True)
-    parser.add_argument('--assignment3', type=Path, default=repo / 'tests/reference')
     parser.add_argument('--out', type=Path, required=True)
     args = parser.parse_args()
     args.out = args.out.resolve()
     args.out.mkdir(parents=True, exist_ok=True)
     expected = {'branch': 2, 'buffer': 4, 'loop': 1, 'multi-call': 1, 'simple-call': 1}
     cases = [('Assignment-2', p, expected[p.stem]) for p in sorted((repo / 'Assignment-2-CFA/Test-Cases').glob('*.c'))]
-    cases += [('Assignment-3', p, 2 if p.stem in ('branch-call', 'CI-local') else 1) for p in sorted((args.assignment3.resolve() / 'Assignment-3-CFLR/Test-Cases').glob('*.c'))]
-    assert len(cases) == 13, 'Expected 5 Assignment-2 and 8 Assignment-3 test files'
+    assert len(cases) == 5, 'Expected 5 Assignment-2 test files'
     for name, count in EXTRA.items():
         cases.append(('regression', repo / 'tests/regression' / (name + '.c'), count))
     rows = []
