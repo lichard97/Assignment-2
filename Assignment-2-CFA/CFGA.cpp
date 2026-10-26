@@ -4,6 +4,8 @@
  */
 
 #include "CFGA.h"
+#include <functional>
+#include <utility>
 
 using namespace SVF;
 using namespace llvm;
@@ -23,7 +25,6 @@ int main(int argc, char **argv)
 
     CFGAnalysis analyzer = CFGAnalysis(icfg);
 
-    // TODO: complete the following method: 'CFGAnalysis::analyze'
     analyzer.analyze(icfg);
 
     analyzer.dumpPaths();
@@ -34,14 +35,70 @@ int main(int argc, char **argv)
 
 void CFGAnalysis::analyze(SVF::ICFG *icfg)
 {
+    reachablePaths.clear();
+    callStack = std::stack<unsigned>();
+
     // Sources and sinks are specified when an analyzer is instantiated.
     for (auto src : sources)
         for (auto snk : sinks)
         {
-            // TODO: DFS the graph, starting from src and detecting the paths ending at snk.
-            // Use the class method 'recordPath' (already defined) to record the path you detected.
-            //@{
+            std::vector<unsigned> path;
+            // Keep visited states on the current path, not across DFS branches.
+            // The same function may be visited again from a different call site.
+            using State = std::pair<unsigned, std::stack<unsigned>>;
+            std::set<State> activeStates;
+            std::set<unsigned> activeCalls;
 
-            //@}
+            std::function<void(const ICFGNode*)> dfs = [&](const ICFGNode* node)
+            {
+                const State state(node->getId(), callStack);
+                if (!activeStates.insert(state).second)
+                    return;
+                path.push_back(node->getId());
+
+                if (node->getId() == snk)
+                {
+                    if (callStack.empty())
+                        recordPath(path);
+                }
+                else
+                {
+                    for (const auto* edge : node->getOutEdges())
+                    {
+                        if (const auto* call = dyn_cast<CallCFGEdge>(edge))
+                        {
+                            const unsigned callSite = call->getCallSite()->getId();
+                            // Bound recursion: do not repeat a call site while it
+                            // is still active. Otherwise the set of paths is infinite.
+                            if (!activeCalls.insert(callSite).second)
+                                continue;
+                            callStack.push(callSite);
+                            dfs(edge->getDstNode());
+                            callStack.pop();
+                            activeCalls.erase(callSite);
+                        }
+                        else if (const auto* ret = dyn_cast<RetCFGEdge>(edge))
+                        {
+                            const unsigned callSite = ret->getCallSite()->getId();
+                            if (callStack.empty() || callStack.top() != callSite)
+                                continue;
+                            callStack.pop();
+                            activeCalls.erase(callSite);
+                            dfs(edge->getDstNode());
+                            callStack.push(callSite);
+                            activeCalls.insert(callSite);
+                        }
+                        else if (edge->isIntraCFGEdge())
+                        {
+                            dfs(edge->getDstNode());
+                        }
+                    }
+                }
+
+                path.pop_back();
+                activeStates.erase(state);
+            };
+
+            dfs(icfg->getICFGNode(src));
         }
 }
